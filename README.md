@@ -1,7 +1,12 @@
 # Distributed File System
 - [src](src) contains the source code:
-  - A [DStore](src/Controller.java) (Data Store) stores files. Each file is replicated R times over different Dstores.
-  - The [Controller](src/Controller.java) orchestrates client requests and maintains an [index](src/IndexEntry.java) with the allocation of files to Dstores as well as the size in byte of each file. Note that the client gets files directly from Dstores, improving scalability.
+  - A [DStore](src/Controller.java) (Data Store) is used to store files.   
+  - Each file is replicated *R* times over different DStores.
+  - The [Controller](src/Controller.java):
+    - Orchestrates client requests (i.e. STORE, LOAD, REMOVE, LIST).
+    - Maintains an [index](src/IndexEntry.java) tracking file locations and file sizes (in bytes).
+    - Manages file replication and rebalancing to preserve file availability.
+  - The client gets the files directly from Dstores, which improves scalability.
 #
 The system supports the following concurrent file operations:
 - **JOIN:** Registers a new data store with the controller so it can participate in file storage and replication.
