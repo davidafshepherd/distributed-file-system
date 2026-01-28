@@ -8,7 +8,7 @@
     - Manages file replication and rebalancing to preserve file availability.
   - The client gets the files directly from Dstores, improving scalability.
 #
-The system supports the following concurrent file operations:
+The system supports the following concurrent operations:
 - **JOIN:** Registers a new data store with the controller so it can participate in file storage and replication.
 - **STORE:** Stores a file by replicating it across multiple data stores and updating the controller’s index.
 - **LOAD:** Retrieves a file by directing the client to a data store holding a replica, with retries on failure.
