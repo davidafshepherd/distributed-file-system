@@ -17,6 +17,8 @@ To compile the project, run:
 javac *.java
 ```
 
+This project requires **Java 21 or later**.
+
 To start the Controller, run:
 
 ```bash
