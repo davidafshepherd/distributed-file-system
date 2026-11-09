@@ -5,23 +5,19 @@ import java.net.Socket;
 import java.util.Map;
 
 /**
- * Thread used to handle a connection between a Dstore (Server) and a Dstore (Client)
- * From the client side
+ * Thread used to handle a connection from a Dstore (client) to a Dstore (server).
  */
 public class DstoreRebalanceThread implements Runnable {
 
-    //Dstore that is communicating with a Dstore
-    private final Dstore dstore;
-    //Endpoint of connection that this thread handles
-    private final Socket Dstore;
-    //Index of the files, that the Dstore has to send, to their sizes
-    private final Map<String, Integer> files;
+    private final Dstore dstore;                // Dstore that is communicating with a Dstore.
+    private final Socket Dstore;                // Endpoint of connection that this thread handles.
+    private final Map<String, Integer> files;   // Index of the files, that the Dstore has to send, to their sizes.
 
     /**
-     * Thread's constructor
-     * @param dstore Dstore that is communicating with a Dstore
-     * @param Dstore endpoint of connection that this thread handles
-     * @param files index of the files, that the Dstore has to send, to their sizes
+     * Thread's constructor.
+     * @param dstore Dstore that is communicating with a Dstore.
+     * @param Dstore endpoint of connection that this thread handles.
+     * @param files index of the files, that the Dstore has to send, to their sizes.
      */
     public DstoreRebalanceThread(Dstore dstore, Socket Dstore, Map<String, Integer> files) {
         this.dstore = dstore;
@@ -30,17 +26,17 @@ public class DstoreRebalanceThread implements Runnable {
     }
 
     /**
-     * Thread's run method
+     * Thread's run method.
      */
     public void run() {
         try {
-            //Creates objects used to print and read from a buffered textual stream
+            // Create objects used to print and read from a buffered textual stream.
             PrintWriter out = new PrintWriter(Dstore.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(Dstore.getInputStream()));
             String line;
 
 
-            //Sends each file
+            // Send each file.
             boolean reBalanceComplete = true;
             for (String fileName : files.keySet()) {
                 out.println("REBALANCE_STORE " + fileName + " " + files.get(fileName));
@@ -51,10 +47,10 @@ public class DstoreRebalanceThread implements Runnable {
                 else reBalanceComplete = false;
             }
 
-            //Tells the Dstore that all files were sent
+            // Tell the Dstore that all files were sent.
             if (reBalanceComplete) dstore.handleThreadAllFilesSent(Dstore);
 
-            //Closes the connection
+            // Close the connection.
             Dstore.close();
         }
         catch(Exception e) {System.err.println("error: " + e);}

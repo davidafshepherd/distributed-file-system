@@ -1,15 +1,15 @@
 import java.util.TimerTask;
 
 /**
- * Timer task used to start the REBALANCE operation every re-balance period
+ * Timer task used to start the REBALANCE operation every re-balance period.
  */
 public class ReBalanceTimerTask extends TimerTask {
 
     /**
-     * Timer task's run method
+     * Timer task's run method.
      */
     public void run() {
-        //Starts the REBALANCE operation every re-balance period
+        // Start the REBALANCE operation every re-balance period.
         synchronized (Controller.reBalanceMonitor) {Controller.handleReBalanceOperation();}
     }
 }

@@ -10,74 +10,70 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Class used to handle communication and requests sent to a Dstore
+ * Class used to handle communication and requests sent to a Dstore.
  */
 public class Dstore {
 
-    //How long the Dstore should wait for a response in milliseconds
+    // Dstore configuration and Controller connection.
     final int timeout;
-    //Folder that the Dstore stores files locally
     private final File fileFolder;
-    //Endpoint of connection between this Dstore and the Controller
     private Socket controller;
 
-    //List of sockets of Dstores that the Dstore needs to send files to
+    // Connected Dstores and rebalancing synchronisation.
     private final List<Socket> Dstores = new ArrayList<>();
-    //Latch used to pause a REBALANCE request while the Dstore sends files
     private CountDownLatch reBalancePauseLatch = new CountDownLatch(0);
 
     /**
-     * Dstore's main method
-     * @param args arguments passed into the Dstore
+     * Dstore's main method.
+     * @param args arguments passed into the Dstore.
      */
     public static void main(String[] args) {
-        //Checks if the arguments given to this main method are in a valid format
+        // Check if the arguments given to this main method are in a valid format.
         if (!checkArguments(args)) System.err.println("error: " + new IllegalArgumentException());
 
-        //Initialises a Dstore
+        // Initialise a Dstore.
         new Dstore(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[3]);
     }
 
     /**
-     * Dstore's constructor
-     * @param port port that the Dstore listens on
-     * @param controllerPort port for the Dstore to use to communicate with the Controller
-     * @param timeout how long the Dstore should wait for a response
-     * @param fileFolder the folder that the Dstore should store files in
+     * Dstore's constructor.
+     * @param port port that the Dstore listens on.
+     * @param controllerPort port for the Dstore to use to communicate with the Controller.
+     * @param timeout how long the Dstore should wait for a response.
+     * @param fileFolder the folder that the Dstore should store files in.
      */
     public Dstore(int port, int controllerPort, int timeout, String fileFolder) {
-        //Stores how long the Dstore should wait for a response in milliseconds
+        // Store  how long the Dstore should wait for a response in milliseconds.
         this.timeout = timeout;
 
-        //Creates a File object that represents the file folder
+        // Create a File object that represents the file folder.
         this.fileFolder = new File(fileFolder);
         clearFileFolder(this.fileFolder);
 
-        //Sets the Dstore's socket to null
+        // Set the Dstore's socket to null.
         this.controller = null;
 
-        //Sets the Dstore's server socket to null
+        // Set the Dstore's server socket to null.
         ServerSocket serverSocket = null;
 
 
-        //Handles the connection established between the Dstore and the Controller
+        // Handle the connection established between the Dstore and the Controller.
         try {
-            //Initialises the Dstore's socket
+            // Initialise the Dstore's socket.
             InetAddress address = InetAddress.getLocalHost();
             this.controller = new Socket(address, controllerPort);
 
-            //Creates a thread to handle the connection established between the Dstore and the Controller
+            // Create a thread to handle the connection established between the Dstore and the Controller.
             new Thread(new DstoreClientThread(this, this.controller, port)).start();
         }
         catch(Exception e) {System.err.println("error: " + e);}
 
-        //Handles each connection established between the Dstore and a client
+        // Handle each connection established between the Dstore and a client.
         try {
-            //Initialises the Dstore's server socket
+            // Initialise the Dstore's server socket.
             serverSocket = new ServerSocket(port);
 
-            //Creates a thread for each connection established between the Dstore and a client
-            //Where each thread handles that connection
+            // Creates a thread for each connection established between the Dstore and a client.
             while (true) {
                 try {
                     Socket client = serverSocket.accept();
@@ -88,7 +84,7 @@ public class Dstore {
         }
         catch (IOException e) {System.err.println("error: " + e);}
         finally {
-            //Closes the connection if it's still open
+            // Close the connection if it's still open.
             if (serverSocket != null) {
                 try { serverSocket.close(); }
                 catch (IOException e) { System.err.println("error: " + e); }
@@ -97,9 +93,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if the arguments given to the main method are in a valid format
-     * @param args arguments given to the main method
-     * @return whether the arguments given to the main method are in a valid format
+     * Checks if the arguments given to the main method are in a valid format.
+     * @param args arguments given to the main method.
+     * @return whether the arguments given to the main method are in a valid format.
      */
     public static boolean checkArguments(String[] args) {
         if (args.length != 4) return false;
@@ -112,28 +108,28 @@ public class Dstore {
     }
 
     /**
-     * Clears the file folder
+     * Clears the file folder.
      */
     public static void clearFileFolder(File folder) {
-        //Gets a list of the files and subdirectories within the file folder
+        // Get a list of the files and subdirectories within the file folder.
         File[] files = folder.listFiles();
         if (files != null) {
-            //Iterates over each file or subdirectory
+            // Iterate over each file or subdirectory.
             for (File file : files) {
-                //If a directory, recursively clears it
+                //If a directory, recursively clears it.
                 if (file.isDirectory()) {
                     clearFileFolder(file);
                 }
-                // Delete the file or empty subdirectory
+                // Delete the file or empty subdirectory.
                 file.delete();
             }
         }
     }
 
     /**
-     * Checks if a request is a valid STORE request sent by a client
-     * @param request request received by Dstore
-     * @return whether the request is a valid STORE request sent by a client or not
+     * Checks if a request is a valid STORE request sent by a client.
+     * @param request request received by Dstore.
+     * @return whether the request is a valid STORE request sent by a client or not.
      */
     public static boolean checkIfClientStoreRequest(String[] request) {
         if (request.length != 3) return false;
@@ -145,9 +141,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if a request is a valid LOAD_DATA request sent by a client
-     * @param request request received by Dstore
-     * @return whether the request is a valid LOAD_DATA request sent by a client or not
+     * Checks if a request is a valid LOAD_DATA request sent by a client.
+     * @param request request received by Dstore.
+     * @return whether the request is a valid LOAD_DATA request sent by a client or not.
      */
     public static boolean checkIfClientLoadDataRequest(String[] request) {
         if (request.length != 2) return false;
@@ -155,9 +151,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if a request is a valid REMOVE request sent by the Controller
-     * @param request request received by Dstore
-     * @return whether the request is a valid REMOVE request sent by the Controller or not
+     * Checks if a request is a valid REMOVE request sent by the Controller.
+     * @param request request received by Dstore.
+     * @return whether the request is a valid REMOVE request sent by the Controller or not.
      */
     public static boolean checkIfControllerRemoveRequest(String [] request) {
         if (request.length != 2) return false;
@@ -165,9 +161,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if a request is a valid LIST request sent by the Controller
-     * @param request request received by the Dstore
-     * @return whether the request is a valid LIST request sent by the Controller or not
+     * Checks if a request is a valid LIST request sent by the Controller.
+     * @param request request received by the Dstore.
+     * @return whether the request is a valid LIST request sent by the Controller or not.
      */
     public static boolean checkIfControllerListRequest(String [] request) {
         if (request.length != 1) return false;
@@ -175,9 +171,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if a request is a valid REBALANCE request sent by the Controller
-     * @param request request received by the Dstore
-     * @return whether the request is a valid REBALANCE request sent by the Controller or not
+     * Checks if a request is a valid REBALANCE request sent by the Controller.
+     * @param request request received by the Dstore.
+     * @return whether the request is a valid REBALANCE request sent by the Controller or not.
      */
     public static boolean checkIfControllerReBalanceRequest(String [] request) {
         if (request.length < 3) return false;
@@ -185,9 +181,9 @@ public class Dstore {
     }
 
     /**
-     * Checks if a request is a valid REBALANCE_STORE request sent by a Dstore
-     * @param request request received by Dstore
-     * @return whether the request is a valid REBALANCE_STORE request sent by a Dstore or not
+     * Checks if a request is a valid REBALANCE_STORE request sent by a Dstore.
+     * @param request request received by Dstore.
+     * @return whether the request is a valid REBALANCE_STORE request sent by a Dstore or not.
      */
     public static boolean checkIfDstoreStoreRequest(String[] request) {
         if (request.length != 3) return false;
@@ -199,32 +195,30 @@ public class Dstore {
     }
 
     /**
-     * Handles a client STORE request
-     * @param client endpoint of the connection with the client
-     * @param out object used to send a response to the client
-     * @param fileName name of file that the client is asking to store
-     * @param fileSize size of the file that the client is asking to store
+     * Handles a client STORE request.
+     * @param client endpoint of the connection with the client.
+     * @param out object used to send a response to the client.
+     * @param fileName name of file that the client is asking to store.
+     * @param fileSize size of the file that the client is asking to store.
      */
     public void handleClientStoreRequest(Socket client, PrintWriter out, String fileName, int fileSize) {
-        //Sends an acknowledgement to the client that the Dstore has received its store request
+        // Send an acknowledgement to the client that the Dstore has received its store request.
         out.println("ACK");
 
-        //Creates a new file within the file folder
-        //To be used to store the file content that is about to be sent by the client
+        // Create a new file within the file folder to store the file content that is about to be sent by the client.
         File file = new File(this.fileFolder, fileName);
 
-        //Waits for the file content to be received
-        //If the file content is not received in time, the file is removed from the file folder
+        // Wait for the file content to be received. If not received in time, the file is removed from the file folder.
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            //Stores the file content
+            // Store the file content.
             client.setSoTimeout(this.timeout);
             byte[] fileContent = client.getInputStream().readNBytes(fileSize);
             client.setSoTimeout(0);
 
-            //Writes the file content to the file
+            // Write the file content to the file.
             fos.write(fileContent);
 
-            //Sends an ACK to the controller
+            // Send an ACK to the controller.
             PrintWriter controllerOut = new PrintWriter(this.controller.getOutputStream(), true);
             controllerOut.println("STORE_ACK " + fileName);
         }
@@ -235,20 +229,20 @@ public class Dstore {
     }
 
     /**
-     * Handles a client LOAD_DATA request
-     * @param client endpoint of the connection with the client
-     * @param fileName name of file that the client is asking to load
+     * Handles a client LOAD_DATA request.
+     * @param client endpoint of the connection with the client.
+     * @param fileName name of file that the client is asking to load.
      */
     public void handleClientLoadDataRequest(Socket client, String fileName) {
-        //Stores the file that we are about to send
+        // Store the file that we are about to send.
         File file = new File(this.fileFolder, fileName);
 
-        //Sends the file content to the client
+        // Send the file content to the client.
         try (FileInputStream fis = new FileInputStream(file)) {
-            //Stores the file content
+            // Store the file content.
             byte[] fileContent = fis.readAllBytes();
 
-            //Sends the file content
+            // Send the file content.
             OutputStream outputStream = client.getOutputStream();
             outputStream.write(fileContent);
         }
@@ -260,32 +254,32 @@ public class Dstore {
     }
 
     /**
-     * Handles a Controller REMOVE request
-     * @param controller endpoint of the connection with the Controller
-     * @param out object used to send a response to the Controller
-     * @param fileName name of file that the Controller is asking to remove
+     * Handles a Controller REMOVE request.
+     * @param controller endpoint of the connection with the Controller.
+     * @param out object used to send a response to the Controller.
+     * @param fileName name of file that the Controller is asking to remove.
      */
     public void handleControllerRemoveRequest(Socket controller, PrintWriter out, String fileName) {
-        //Stores the file that we are about to send
+        // Store the file that we are about to send.
         File file = new File(this.fileFolder, fileName);
 
-        //Checks if the file exists
+        // Check if the file exists.
         if (!file.exists()) {out.println("ERROR_FILE_DOES_NOT_EXIST " + fileName);}
 
-        //Deletes the file
+        // Delete the file.
         if (file.delete()) {out.println("REMOVE_ACK " + fileName);}
     }
 
     /**
-     * Handles a Controller LIST request
-     * @param controller endpoint of the connection with the Controller
-     * @param out object used to send a response to the Controller
+     * Handles a Controller LIST request.
+     * @param controller endpoint of the connection with the Controller.
+     * @param out object used to send a response to the Controller.
      */
     public void handleControllerListRequest(Socket controller, PrintWriter out) {
-        //Stores the names of the files stored within the file folder
+        // Store the names of the files stored within the file folder.
         String[] fileNames = this.fileFolder.list();
 
-        //Sends the names of the files to the Controller
+        // Send the names of the files to the Controller.
         if (fileNames == null || fileNames.length == 0) {out.println("LIST");}
         else {
             StringBuilder string = new StringBuilder();
@@ -295,17 +289,17 @@ public class Dstore {
     }
 
     /**
-     * Handles a Controller REBALANCE request
-     * @param controller endpoint of the connection with the Controller
-     * @param out object used to send a response to the Controller
-     * @param request rebalance request sent by the controller
+     * Handles a Controller REBALANCE request.
+     * @param controller endpoint of the connection with the Controller.
+     * @param out object used to send a response to the Controller.
+     * @param request rebalance request sent by the controller.
      */
     public void handleControllerReBalanceRequest(Socket controller, PrintWriter out, List<String> request) {
         try {
-            //Index of files to the ports that this Dstore has to send them to
+            // Index of files to the ports that this Dstore has to send them to.
             Map<Integer, List<String>> filesToSend = new HashMap<>();
 
-            //Stores the send requests
+            // Store the send requests.
             int numberOfFilesToSend = Integer.parseInt(request.getFirst());
             request.removeFirst();
             for (int i = 0; i < numberOfFilesToSend; i++) {
@@ -326,10 +320,10 @@ public class Dstore {
                 }
             }
 
-            //Index of files to the ports that this Dstore has to send them to
+            // Index of files to the ports that this Dstore has to send them to.
             List<String> filesToRemove = new ArrayList<>();
 
-            //Stores the remove requests
+            // Store the remove requests.
             int numberOfFilesToRemove = Integer.parseInt(request.getFirst());
             request.removeFirst();
             for (int i = 0; i < numberOfFilesToRemove; i++) {
@@ -338,19 +332,19 @@ public class Dstore {
                 request.removeFirst();
             }
 
-            //Carries out the send requests
+            // Carry out the send requests.
             boolean reBalanceComplete;
             synchronized (Dstores) {
                 Dstores.clear();
                 reBalancePauseLatch = new CountDownLatch(filesToSend.keySet().size());
                 for (int port : filesToSend.keySet()) {
                     try {
-                        //Initialises the Dstore's socket
+                        // Initialise the Dstore's socket.
                         InetAddress address = InetAddress.getLocalHost();
                         Socket Dstore = new Socket(address, port);
                         Dstores.add(Dstore);
 
-                        //Stores the size of the files that it needs to send
+                        // Store the size of the files that it needs to send.
                         Map<String, Integer> fileNamesToSizes = new HashMap<>();
                         for (String fileName : filesToSend.get(port)) {
                             File file = new File(this.fileFolder, fileName);
@@ -358,19 +352,19 @@ public class Dstore {
                             else throw new IOException();
                         }
 
-                        //Creates a thread to handle the connection established between the Dstore and the Dstore
+                        // Create a thread to handle the connection established between the Dstore and the Dstore.
                         new Thread(new DstoreRebalanceThread(this, Dstore, fileNamesToSizes)).start();
                     } catch (Exception e) {
                         System.err.println("error: " + e);
                     }
                 }
 
-                //Waits for all send requests to be carried out
+                // Wait for all send requests to be carried out.
                 reBalanceComplete = reBalancePauseLatch.await(timeout, TimeUnit.MILLISECONDS);
                 reBalancePauseLatch = new CountDownLatch(0);
             }
 
-            //Closes any connections still opened
+            // Close any connections still opened.
             for (Socket Dstore : Dstores) {
                 if (Dstore != null) {
                     try {Dstore.close();}
@@ -378,21 +372,21 @@ public class Dstore {
                 }
             }
 
-            //Carries out the remove requests
+            // Carry out the remove requests.
             for (String fileName : filesToRemove) {
                 File file = new File(this.fileFolder, fileName);
                 if (!file.delete()) reBalanceComplete = false;
             }
 
-            //Tells the controller the rebalance operation was complete
+            // Tell the controller the rebalance operation was complete.
             if (reBalanceComplete)  out.println("REBALANCE_COMPLETE");
         }
         catch (Exception ignored){}
     }
 
     /**
-     * Handles a thread sending all the files that it was meant to send a Dstore
-     * @param Dstore endpoint of the connection with the Dstore
+     * Handles a thread sending all the files that it was meant to send a Dstore.
+     * @param Dstore endpoint of the connection with the Dstore.
      */
     public void handleThreadAllFilesSent(Socket Dstore) {
         if (0 < reBalancePauseLatch.getCount() && Dstores.contains(Dstore)) reBalancePauseLatch.countDown();
