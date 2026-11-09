@@ -1,12 +1,15 @@
 # Distributed File System
 - [src](src) contains the source code:
-  - A [Dstore](src/Dstore.java) (Data Store) is used to store and serve files.   
-  - Each file is replicated *R* times over different Dstores.
+  - A [Dstore](src/Dstore.java) (Data Store) stores and serves files.   
+  - Each file is replicated *R* times across different Dstores.
   - The [Controller](src/Controller.java):
     - Orchestrates client requests (i.e. STORE, LOAD, REMOVE, LIST).
-    - Maintains an [index](src/IndexEntry.java) tracking each file's locations and size (in bytes).
-    - Manages file replication and rebalancing to preserve file availability.
+    - Maintains an [index](src/IndexEntry.java) tracking each file's locations, size in bytes and state.
+    - Coordinates file replication and rebalancing to preserve file availability.
   - The client gets the files directly from Dstores, improving scalability.
+- [client](client) contains the provided client library and an example test program:
+  - [client.jar](client.client.jar) provides the client API for communicating with the Controller and transferring files to and from Dstores.
+  - [ClientMain](client/ClientMain.java) uses the client library to demonstrate file operations and concurrent requests.
 #
 To compile the project, run:
 
@@ -37,16 +40,6 @@ Where:
 - `cport` is the Controller's port.
 - `timeout` is the timeout in milliseconds.
 - `file_folder` is the directory where the Dstore stores files.
-
-To start a client, run:
-
-```bash
-java Client <cport> <timeout>
-```
-
-Where:
-- `cport` is the Controller's port.
-- `timeout` is the timeout in milliseconds.
 #
 The system supports the following concurrent operations:
 - **JOIN:** Registers a new data store with the controller so it can participate in file storage and replication.
